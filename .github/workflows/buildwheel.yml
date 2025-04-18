@@ -1,0 +1,49 @@
+name: Build wheel
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '37 22 * * *'
+  workflow_dispatch:
+
+jobs:
+  gha:
+    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+        
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: git clone
+      run: |
+        git clone https://github.com/lxml/lxml.git
+        export latest_release=$(git tag --list | grep lxml- | sort -Vr | head -n1)
+        git checkout "${latest_release}"
+
+    - name: Build lxml wheel
+      uses: pypa/cibuildwheel@v2.23.2
+      with:
+        only: cp313-win_arm64
+        package-dir: lxml
+
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        automatic_release_tag: "latest"
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        draft: false
+        title: "Wheel Build"
+        files: |
+          wheelhouse/*.whl
