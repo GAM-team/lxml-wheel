@@ -29,6 +29,7 @@ jobs:
     - name: git clone
       run: |
         git clone https://github.com/lxml/lxml.git
+        cd lxml
         git tag --list
         export latest_release=$(git tag --list | grep lxml- | sort -Vr | head -n1)
         echo "Checking out tag ${latest_release}..."
