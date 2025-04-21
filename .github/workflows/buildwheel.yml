@@ -50,3 +50,26 @@ jobs:
         title: "Wheel Build"
         files: |
           wheelhouse/*.whl
+
+  testwheel:
+    needs: gha
+    runs-on: windows-11-arm
+    steps:
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          check-latest: true
+
+      - name: download and install wheel release
+        run: |
+          latest_lxml_whl=$(curl https://api.github.com/repos/GAM-team/lxml-wheel/releases/latest -s | jq -r .assets.[0].browser_download_url)
+          echo "Downloading ${latest_lxml_whl}..."
+          curl -O -L "$latest_lxml_whl"
+          python3 -m pip install lxml*.whl
+
+      - name: Run XML
+        run: |
+          python3 -c "from lxml import etree; root = etree.Element('root'); print(etree.tostring(root, pretty_print=True));"
+          
